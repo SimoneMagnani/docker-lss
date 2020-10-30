@@ -1,0 +1,20 @@
+services:
+  - docker
+# Optionally, specify where you want your container built, I like to use the latest version of Linux
+dist: focal
+# Utilities
+env:
+  global:
+    - TZ=UTC
+    - IMAGE_NAME="danysk/manjaro-with-yay"
+# Version computation. Here dates are used instead of Semantic Versioning
+before_script:
+  - export TAG="$(git describe || git log -n1 --date=format:'%Y-%m-%dT%H%M%S' --format=%cd)$(date +%Y-%m-%d_%H%M)"
+script:
+# Build the image
+  - docker build -t $IMAGE_NAME:latest -t $IMAGE_NAME:$TAG .
+# Login into docker hub from a non-interactive terminal
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin docker.io
+# Push the images, with both names (upload will happen only once, as they refer the same layer)
+  - docker push $IMAGE_NAME:$TAG
+  - docker push $IMAGE_NAME:latest
